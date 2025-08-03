@@ -1,11 +1,11 @@
 import type { Audio, CreateAudioData, UpdateAudioData, AudioListResponse } from "@/types/audio"
 
-const API_BASE_URL = "http://localhost:5000/api/v1"
+
 
 export const audioApi = {
   // Get all audio with pagination
   getAll: async (page = 1, limit = 10): Promise<AudioListResponse> => {
-    const response = await fetch(`${API_BASE_URL}/audio/all-audio?page=${page}&limit=${limit}`)
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/audio/all-audio?page=${page}&limit=${limit}`)
     if (!response.ok) {
       throw new Error("Failed to fetch audio")
     }
@@ -29,7 +29,7 @@ export const audioApi = {
 
   // Get single audio by ID
   getById: async (id: string): Promise<Audio> => {
-    const response = await fetch(`${API_BASE_URL}/audio/${id}`)
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/audio/${id}`)
     if (!response.ok) {
       throw new Error("Failed to fetch audio")
     }
@@ -63,7 +63,7 @@ export const audioApi = {
   // Create new audio
   create: async (data: CreateAudioData): Promise<Audio> => {
     const formData = audioApi.buildFormData(data)
-    const response = await fetch(`${API_BASE_URL}/audio/upload`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/audio/upload`, {
       method: "POST",
       // Do NOT set Content-Type header for FormData, browser sets it automatically
       body: formData,
@@ -78,7 +78,7 @@ export const audioApi = {
   // Update audio
   update: async (data: UpdateAudioData): Promise<Audio> => {
     const formData = audioApi.buildFormData(data)
-    const response = await fetch(`${API_BASE_URL}/audio/${data._id}/update`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/audio/${data._id}/update`, {
       method: "PATCH",
       // Do NOT set Content-Type header for FormData, browser sets it automatically
       body: formData,
@@ -92,7 +92,7 @@ export const audioApi = {
 
   // Delete audio
   delete: async (id: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/audio/${id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/audio/${id}`, {
       method: "DELETE",
     })
     if (!response.ok) {
