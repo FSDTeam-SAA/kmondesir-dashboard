@@ -58,7 +58,7 @@ export const useUpdateCategory = () => {
       formData.append("about", data.about);
       formData.append("slug", data.slug);
       if (data.image) {
-        formData.append("image", data.image);
+        formData.append("imageLink", data.image);
       }
       return categoryAPI.update(id, formData);
     },

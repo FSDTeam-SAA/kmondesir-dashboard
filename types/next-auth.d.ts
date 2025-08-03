@@ -1,12 +1,13 @@
 declare module "next-auth" {
   interface Session {
-    accessToken?: string
+    accessToken?: string 
     refreshToken?: string
     user: {
       id: string
       email: string
       name: string
       role: string
+
     }
   }
 

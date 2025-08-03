@@ -2,23 +2,39 @@
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Plus, Edit, Trash2 } from "lucide-react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
 import { useSubscriptions, useDeleteSubscription } from "@/hooks/use-subscriptions"
 import { EditSubscriptionModal } from "@/components/modals/edit-subscription-modal"
 import type { Subscription } from "@/types/api"
 import { useState } from "react"
+import { DeleteConfirmationModal } from "./_components/DeleteConfirmationModal"
 
 export default function SubscriptionPage() {
   const { data: subscriptionsData, isLoading, error } = useSubscriptions()
   const deleteSubscriptionMutation = useDeleteSubscription()
   const [editModalOpen, setEditModalOpen] = useState(false)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null)
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this subscription?")) {
-      await deleteSubscriptionMutation.mutateAsync(id)
+  const handleDelete = (subscription: Subscription) => {
+    setSelectedSubscription(subscription)
+    setDeleteModalOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (selectedSubscription) {
+      await deleteSubscriptionMutation.mutateAsync(selectedSubscription._id)
+      setDeleteModalOpen(false)
+      setSelectedSubscription(null)
     }
   }
 
@@ -45,7 +61,7 @@ export default function SubscriptionPage() {
             <p className="text-gray-400">Dashboard &gt; Subscription</p>
           </div>
           <Link href="/subscription/create">
-            <Button className="bg-[#C5A46D] hover:bg-[#B8956A] text-white">
+            <Button className="bg-[#C5A46D] hover:bg-[#B8956A] text-black hover:text-white">
               Create Subscription <Plus className="ml-2 h-4 w-4" />
             </Button>
           </Link>
@@ -132,7 +148,7 @@ export default function SubscriptionPage() {
                             size="sm"
                             variant="ghost"
                             className="text-gray-400 hover:text-red-400 hover:bg-gray-700"
-                            onClick={() => handleDelete(subscription._id)}
+                            onClick={() => handleDelete(subscription)}
                             disabled={deleteSubscriptionMutation.isPending}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -144,13 +160,19 @@ export default function SubscriptionPage() {
             </TableBody>
           </Table>
         </div>
-
-        {/* Pagination */}
-        <div className="flex items-center justify-between">
-          <p className="text-gray-400 text-sm">Showing {subscriptionsData?.data?.length || 0} results</p>
-        </div>
       </div>
-      <EditSubscriptionModal open={editModalOpen} onOpenChange={setEditModalOpen} subscription={selectedSubscription} />
+      <EditSubscriptionModal
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        subscription={selectedSubscription}
+      />
+      <DeleteConfirmationModal
+        open={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        onConfirm={confirmDelete}
+        isPending={deleteSubscriptionMutation.isPending}
+        planName={selectedSubscription?.planName}
+      />
     </DashboardLayout>
   )
 }

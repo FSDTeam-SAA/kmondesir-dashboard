@@ -28,7 +28,7 @@ export function Header({ setSidebarOpen }: HeaderProps) {
         <div className="flex items-center gap-x-4 lg:gap-x-6">
           {/* Profile dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger asChild className="hover:text-white">
               <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-gray-700">
                 <div className="text-right">
                   <div className="text-sm font-medium">Alex rock</div>
@@ -42,17 +42,18 @@ export function Header({ setSidebarOpen }: HeaderProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-[#C5A46D]">
-              <DropdownMenuItem
-                className="text-white hover:bg-[#B8956A] cursor-pointer"
-                onClick={() => setChangePasswordOpen(true)}
-              >
-                Personal Information
-              </DropdownMenuItem>
+              
               <DropdownMenuItem
                 className="text-white hover:bg-[#B8956A] cursor-pointer"
                 onClick={() => setChangePasswordOpen(true)}
               >
                 Change Password
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-white hover:bg-[#B8956A] cursor-pointer"
+                onClick={() => setLogoutOpen(true)}
+              >
+                Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

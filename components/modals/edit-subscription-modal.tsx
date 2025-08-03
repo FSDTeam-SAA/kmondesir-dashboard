@@ -145,7 +145,7 @@ export function EditSubscriptionModal({ open, onOpenChange, subscription }: Edit
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="border-gray-600 text-gray-300 hover:bg-gray-700"
+              className="border-gray-600 text-black hover:text-white hover:bg-gray-700"
             >
               Cancel
             </Button>
