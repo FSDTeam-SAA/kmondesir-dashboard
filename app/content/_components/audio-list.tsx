@@ -7,6 +7,7 @@ import { DeleteAudioModal } from "./delete-audio-modal"
 import type { Audio } from "@/types/audio"
 import Image from "next/image"
 import { useAudioList } from "@/hooks/use-audio"
+import { Skeleton } from "@/components/ui/skeleton" // Import your Skeleton component
 
 interface AudioListProps {
   onEdit: (audio: Audio) => void
@@ -15,9 +16,8 @@ interface AudioListProps {
 
 export function AudioList({ onEdit, onCreateNew }: AudioListProps) {
   const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10 // This should match the default limit in useAudioList and API
+  const itemsPerPage = 10
 
-  // FIX: Correctly declare deleteModal state
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; audio: Audio | null }>({
     open: false,
     audio: null,
@@ -48,17 +48,14 @@ export function AudioList({ onEdit, onCreateNew }: AudioListProps) {
 
   const renderPaginationButtons = () => {
     const buttons = []
-    const maxButtons = 5 // Max number of visible page buttons
+    const maxButtons = 5
 
     if (meta.totalPages <= maxButtons) {
       for (let i = 1; i <= meta.totalPages; i++) {
         buttons.push(i)
       }
     } else {
-      // Always show first page
       buttons.push(1)
-
-      // Logic for showing ellipsis and dynamic range
       let start = Math.max(2, currentPage - Math.floor(maxButtons / 2) + 1)
       let end = Math.min(meta.totalPages - 1, currentPage + Math.floor(maxButtons / 2) - 1)
 
@@ -80,7 +77,6 @@ export function AudioList({ onEdit, onCreateNew }: AudioListProps) {
         buttons.push("...")
       }
 
-      // Always show last page
       buttons.push(meta.totalPages)
     }
 
@@ -107,14 +103,42 @@ export function AudioList({ onEdit, onCreateNew }: AudioListProps) {
     )
   }
 
-  if (isLoading) {
-    return (
-      <div className="bg-slate-900 min-h-screen p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-white">Loading audio list...</div>
+  // Skeleton Loader for Table Rows
+  const renderSkeletonRows = () => {
+    return Array.from({ length: itemsPerPage }).map((_, index) => (
+      <div key={index} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-750">
+        {/* Video Info Skeleton */}
+        <div className="col-span-4 flex items-center gap-3">
+          <Skeleton className="w-[120px] h-[80px] rounded bg-slate-700" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-[150px] bg-slate-700" />
+            <Skeleton className="h-3 w-[200px] bg-slate-700" />
+            <Skeleton className="h-3 w-[180px] bg-slate-700" />
+          </div>
+        </div>
+
+        {/* Genres Skeleton */}
+        <div className="col-span-2">
+          <Skeleton className="h-4 w-[100px] bg-slate-700" />
+        </div>
+
+        {/* Date Skeleton */}
+        <div className="col-span-2">
+          <Skeleton className="h-4 w-[80px] bg-slate-700" />
+        </div>
+
+        {/* Listeners Skeleton */}
+        <div className="col-span-2">
+          <Skeleton className="h-4 w-[60px] bg-slate-700" />
+        </div>
+
+        {/* Actions Skeleton */}
+        <div className="col-span-2 flex gap-2">
+          <Skeleton className="h-8 w-8 bg-slate-700" />
+          <Skeleton className="h-8 w-8 bg-slate-700" />
         </div>
       </div>
-    )
+    ))
   }
 
   if (error) {
@@ -154,7 +178,9 @@ export function AudioList({ onEdit, onCreateNew }: AudioListProps) {
 
         {/* Table Body */}
         <div className="divide-y divide-slate-700">
-          {audioList.length === 0 ? (
+          {isLoading ? (
+            renderSkeletonRows()
+          ) : audioList.length === 0 ? (
             <div className="p-8 text-center text-slate-400">
               No audio content found. Create your first audio content to get started.
             </div>
