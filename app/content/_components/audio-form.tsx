@@ -19,6 +19,7 @@ import { Plus, Upload, X, ArrowLeft } from "lucide-react";
 import type { Audio, CreateAudioData, AudioChapter } from "@/types/audio";
 import Image from "next/image";
 import { useCreateAudio, useUpdateAudio } from "@/hooks/use-audio";
+import { useCategories } from "@/hooks/use-categories";
 
 interface AudioFormProps {
   audio?: Audio;
@@ -55,6 +56,9 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
 
   const createAudio = useCreateAudio();
   const updateAudio = useUpdateAudio();
+  const { data: categoriesResponse, isLoading: categoriesLoading } =
+    useCategories();
+  const categories = categoriesResponse?.data || [];
 
   const audioFileInputRef = useRef<HTMLInputElement>(null);
   const coverImageFileInputRef = useRef<HTMLInputElement>(null);
@@ -103,6 +107,9 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
 
     const payload: CreateAudioData = {
       ...formData,
+      // Pass the actual File objects for upload
+      audioFile: selectedAudioFile,
+      coverImageFile: selectedCoverImageFile,
     };
 
     try {
@@ -434,15 +441,21 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
               onValueChange={(value) =>
                 setFormData((prev) => ({ ...prev, subject: value }))
               }
+              disabled={categoriesLoading}
             >
               <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
-                <SelectValue placeholder="Select genre" />
+                <SelectValue
+                  placeholder={
+                    categoriesLoading ? "Loading categories..." : "Select genre"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Hadith">Hadith</SelectItem>
-                <SelectItem value="Heart Softners">Heart Softners</SelectItem>
-                <SelectItem value="Quran">Quran</SelectItem>
-                <SelectItem value="Islamic History">Islamic History</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category._id} value={category.name}>
+                    {category.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
