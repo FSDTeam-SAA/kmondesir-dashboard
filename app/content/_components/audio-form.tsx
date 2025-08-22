@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,13 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Plus, Upload, X, ArrowLeft } from "lucide-react";
-import type { Audio, CreateAudioData, AudioChapter } from "@/types/audio";
 import Image from "next/image";
 import { useCreateAudio, useUpdateAudio } from "@/hooks/use-audio";
 import { useCategories } from "@/hooks/use-categories";
+import type { Audio, CreateAudioData, AudioChapter } from "@/types/audio";
 
 interface AudioFormProps {
   audio?: Audio;
@@ -34,25 +33,25 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
     language: audio?.language || "english",
     about: audio?.about || "",
     author: audio?.author || "",
-    category: audio?.category || "",
+    // Initialize category with _id from audio.category if it exists
+    category: audio?.category?._id || "", // Use _id from category object
     description: audio?.description || "",
     tags: audio?.tags || [],
     chapter: audio?.chapter?.map((ch) => ({
       title: ch.title,
-      start: ch.start,
-      end: ch.end,
-    })) || [{ title: "", start: "00:00:00", end: "00:00:00" }],
-    coverImage: audio?.coverImage || "", // For display
-    filePath: audio?.filePath || "", // For display
+      start: ch.start || "00:00",
+      end: ch.end || "00:00",
+    })) || [{ title: "", start: "00:00", end: "00:00" }],
+    coverImage: audio?.coverImage || "",
+    filePath: audio?.filePath || "",
   });
 
   const [newTag, setNewTag] = useState("");
-  const [selectedAudioFile, setSelectedAudioFile] = useState<File | undefined>(
-    undefined
-  );
+  const [selectedAudioFile, setSelectedAudioFile] = useState<File | undefined>();
   const [selectedCoverImageFile, setSelectedCoverImageFile] = useState<
     File | undefined
-  >(undefined);
+  >();
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const createAudio = useCreateAudio();
   const updateAudio = useUpdateAudio();
@@ -63,7 +62,7 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
   const audioFileInputRef = useRef<HTMLInputElement>(null);
   const coverImageFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Cleanup object URLs when component unmounts or files change
+  // Cleanup object URLs
   useEffect(() => {
     return () => {
       if (formData.filePath && formData.filePath.startsWith("blob:")) {
@@ -75,14 +74,44 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
     };
   }, [formData.filePath, formData.coverImage]);
 
+  // Validate time format (MM:SS or HH:MM:SS)
+  const validateTimeFormat = (time: string): boolean => {
+    const regex = /^(\d{2}:\d{2}(:\d{2})?)$/;
+    return regex.test(time);
+  };
+
+  // Validate form data before submission
+  const validateForm = (): boolean => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!formData.category) {
+      newErrors.category = "Please select a category";
+    }
+
+    formData.chapter.forEach((ch, index) => {
+      if (!ch.title) {
+        newErrors[`chapter.${index}.title`] = `Chapter ${index + 1} title is required`;
+      }
+      if (!validateTimeFormat(ch.start)) {
+        newErrors[`chapter.${index}.start`] = `Invalid start time format in chapter ${index + 1} (use MM:SS or HH:MM:SS)`;
+      }
+      if (!validateTimeFormat(ch.end)) {
+        newErrors[`chapter.${index}.end`] = `Invalid end time format in chapter ${index + 1} (use MM:SS or HH:MM:SS)`;
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedAudioFile(file);
-      setFormData((prev) => ({ ...prev, filePath: URL.createObjectURL(file) })); // For client-side preview
+      setFormData((prev) => ({ ...prev, filePath: URL.createObjectURL(file) }));
     } else {
       setSelectedAudioFile(undefined);
-      setFormData((prev) => ({ ...prev, filePath: audio?.filePath || "" })); // Revert to original or clear
+      setFormData((prev) => ({ ...prev, filePath: audio?.filePath || "" }));
     }
   };
 
@@ -95,19 +124,22 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
       setFormData((prev) => ({
         ...prev,
         coverImage: URL.createObjectURL(file),
-      })); // For client-side preview
+      }));
     } else {
       setSelectedCoverImageFile(undefined);
-      setFormData((prev) => ({ ...prev, coverImage: audio?.coverImage || "" })); // Revert to original or clear
+      setFormData((prev) => ({ ...prev, coverImage: audio?.coverImage || "" }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!validateForm()) {
+      return;
+    }
+
     const payload: CreateAudioData = {
       ...formData,
-      // Pass the actual File objects for upload
       audioFile: selectedAudioFile,
       coverImageFile: selectedCoverImageFile,
     };
@@ -121,17 +153,14 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
       onSuccess?.();
     } catch (error) {
       console.error("Failed to save audio:", error);
-      // You might want to display a toast or error message to the user here
+      setErrors({ submit: "Failed to save audio. Please try again." });
     }
   };
 
   const addChapter = () => {
     setFormData((prev) => ({
       ...prev,
-      chapter: [
-        ...prev.chapter,
-        { title: "", start: "00:00:00", end: "00:00:00" },
-      ],
+      chapter: [...prev.chapter, { title: "", start: "00:00", end: "00:00" }],
     }));
   };
 
@@ -193,18 +222,22 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
         <Button
           onClick={handleSubmit}
           variant="outline"
-          className="bg-amber-600 hover:bg-amber-700 text-white border-amber-600"
+          className="bg-[#C5A46D] hover:bg-[#B8956A] text-black hover:text-white"
           disabled={isLoading}
         >
           Save
         </Button>
       </div>
 
+      {errors.submit && (
+        <div className="text-red-500 text-sm">{errors.submit}</div>
+      )}
+
       <form
         onSubmit={handleSubmit}
         className="grid grid-cols-1 lg:grid-cols-3 gap-6"
       >
-        {/* Left Column - Audio Upload and Form */}
+        {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
           {/* Audio Upload */}
           <Card className="bg-slate-800 border-slate-700">
@@ -223,11 +256,11 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
                 </div>
               )}
               <div className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center">
-                <Upload className="mx-auto h-12 w-12 text-amber-600 mb-4" />
+                <Upload className="mx-auto h-12 w-12 bg-[#C5A46D] hover:bg-[#B8956A] hover:text-white mb-4" />
                 <p className="text-slate-300 mb-4">Upload Your Audiobook.</p>
                 <Button
                   type="button"
-                  className="bg-amber-600 hover:bg-amber-700"
+                  className="bg-[#C5A46D] hover:bg-[#B8956A] text-black hover:text-white"
                   onClick={() => audioFileInputRef.current?.click()}
                 >
                   Add Audio
@@ -350,7 +383,7 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
               {formData.tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="bg-amber-600 text-white px-2 py-1 rounded-md text-sm flex items-center gap-1"
+                  className="bg-[#C5A46D] hover:bg-[#B8956A] text-black hover:text-white px-2 py-1 rounded-md text-sm flex items-center gap-1"
                 >
                   {tag}
                   <X
@@ -365,7 +398,7 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
           {/* Chapters */}
           <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
-              <CardTitle className="text-white">Chapter</CardTitle>
+              <CardTitle className="text-white">Chapters</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {formData.chapter.map((chapter, index) => (
@@ -382,6 +415,11 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
                       placeholder="Type chapter name here..."
                       className="bg-slate-700 border-slate-600 text-white"
                     />
+                    {errors[`chapter.${index}.title`] && (
+                      <p className="text-red-500 text-sm">
+                        {errors[`chapter.${index}.title`]}
+                      </p>
+                    )}
                   </div>
                   <div className="col-span-3">
                     <Label className="text-white text-sm">Start:</Label>
@@ -390,9 +428,14 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
                       onChange={(e) =>
                         updateChapter(index, "start", e.target.value)
                       }
-                      placeholder="00:00:00"
+                      placeholder="00:00"
                       className="bg-slate-700 border-slate-600 text-white"
                     />
+                    {errors[`chapter.${index}.start`] && (
+                      <p className="text-red-500 text-sm">
+                        {errors[`chapter.${index}.start`]}
+                      </p>
+                    )}
                   </div>
                   <div className="col-span-3">
                     <Label className="text-white text-sm">End:</Label>
@@ -401,9 +444,14 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
                       onChange={(e) =>
                         updateChapter(index, "end", e.target.value)
                       }
-                      placeholder="00:00:00"
+                      placeholder="00:00"
                       className="bg-slate-700 border-slate-600 text-white"
                     />
+                    {errors[`chapter.${index}.end`] && (
+                      <p className="text-red-500 text-sm">
+                        {errors[`chapter.${index}.end`]}
+                      </p>
+                    )}
                   </div>
                   <div className="col-span-1">
                     {formData.chapter.length > 1 && (
@@ -422,7 +470,7 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
               <Button
                 type="button"
                 onClick={addChapter}
-                className="bg-amber-600 hover:bg-amber-700"
+                className="bg-[#C5A46D] hover:bg-[#B8956A] text-black hover:text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Chapter
@@ -431,33 +479,36 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
           </Card>
         </div>
 
-        {/* Right Column - Genre and Thumbnail */}
+        {/* Right Column */}
         <div className="space-y-6">
-          {/* Genre */}
+          {/* Category */}
           <div className="space-y-2">
-            <Label className="text-white">Genres Title</Label>
+            <Label className="text-white">Category</Label>
             <Select
-              value={formData.subject}
+              value={formData.category}
               onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, subject: value }))
+                setFormData((prev) => ({ ...prev, category: value }))
               }
               disabled={categoriesLoading}
             >
               <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
                 <SelectValue
                   placeholder={
-                    categoriesLoading ? "Loading categories..." : "Select genre"
+                    categoriesLoading ? "Loading categories..." : "Select category"
                   }
                 />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (
-                  <SelectItem key={category._id} value={category.name}>
+                  <SelectItem key={category._id} value={category._id}>
                     {category.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {errors.category && (
+              <p className="text-red-500 text-sm">{errors.category}</p>
+            )}
           </div>
 
           {/* Thumbnail */}
@@ -478,13 +529,13 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
                 </div>
               )}
               <div className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center">
-                <Upload className="mx-auto h-12 w-12 text-amber-600 mb-4" />
+                <Upload className="mx-auto h-12 w-12 bg-[#C5A46D] hover:bg-[#B8956A] text-black hover:text-white mb-4" />
                 <p className="text-slate-300 mb-4">
                   Drag and drop image here, or click add image
                 </p>
                 <Button
                   type="button"
-                  className="bg-amber-600 hover:bg-amber-700"
+                  className="bg-[#C5A46D] hover:bg-[#B8956A] text-black hover:text-white"
                   onClick={() => coverImageFileInputRef.current?.click()}
                 >
                   Add Image
@@ -524,7 +575,7 @@ export function AudioForm({ audio, onSuccess, onCancel }: AudioFormProps) {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-amber-600 hover:bg-amber-700"
+            className="w-full bg-[#C5A46D] hover:bg-[#B8956A] text-black hover:text-white"
           >
             {isLoading ? "Saving..." : audio ? "Update Audio" : "Create Audio"}
           </Button>

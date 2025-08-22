@@ -3,6 +3,12 @@ export interface AudioChapter {
   title: string;
   start: string;
   end: string;
+  
+}
+
+export interface Category {
+  _id: string;
+  name: string;
 }
 
 export interface Audio {
@@ -13,7 +19,7 @@ export interface Audio {
   filePath: string; // This will be the URL from the server
   about: string;
   author: string;
-  category: string;
+   category: Category; // 👈 instead of string
   chapter: AudioChapter[];
   coverImage: string; // This will be the URL from the server
   createdAt: string;
@@ -35,6 +41,7 @@ export interface CreateAudioData {
   category: string;
   description: string;
   tags: string[];
+  _id?: string; // Optional, in case of editing existing audio
   chapter: Omit<AudioChapter, "_id">[];
   // These are for actual file uploads
   audioFile?: File;
