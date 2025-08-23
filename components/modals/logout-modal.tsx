@@ -23,7 +23,7 @@ export function LogoutModal({ open, onOpenChange }: LogoutModalProps) {
             <BookOpen className="h-12 w-12 text-[#C5A46D]" />
           </div>
           <div className="mb-2">
-            <div className="text-white font-semibold text-lg">MP3Books</div>
+            <div className="text-white font-semibold text-lg">MP3iBooks</div>
             <div className="text-gray-400 text-sm">MP3 Files of Classical Islamic Books</div>
           </div>
 

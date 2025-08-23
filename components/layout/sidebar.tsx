@@ -1,66 +1,80 @@
-"use client"
+"use client";
 
-import { Fragment } from "react"
-import { Dialog, Transition } from "@headlessui/react"
-import { XMarkIcon } from "@heroicons/react/24/outline"
-import { LayoutDashboard, Music, FileText, CreditCard, LogOut, BookOpen } from "lucide-react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { useState } from "react"
-import { LogoutModal } from "@/components/modals/logout-modal"
+import { Fragment } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  LayoutDashboard,
+  Music,
+  FileText,
+  CreditCard,
+  LogOut,
+  BookOpen,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { LogoutModal } from "@/components/modals/logout-modal";
+import Image from "next/image";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Genres", href: "/genres", icon: Music },
   { name: "Content", href: "/content", icon: FileText },
   { name: "Subscription", href: "/subscription", icon: CreditCard },
-]
+];
 
 interface SidebarProps {
-  open: boolean
-  setOpen: (open: boolean) => void
+  open: boolean;
+  setOpen: (open: boolean) => void;
 }
 
 export function Sidebar({ open, setOpen }: SidebarProps) {
-  const pathname = usePathname()
-  const [logoutOpen, setLogoutOpen] = useState(false)
+  const pathname = usePathname();
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col bg-[#1C2A3A]">
       {/* Logo */}
-      <div className="flex h-16 shrink-0 items-center px-6">
-        <div className="flex items-center space-x-2">
-          <BookOpen className="h-8 w-8 text-[#C5A46D]" />
+      <div className="h-16 px-6 ml-12">
           <div>
-            <div className="text-white font-semibold text-lg">MP3Books</div>
-            <div className="text-gray-400 text-xs">Admin Dashboard</div>
+            <Image
+              src="/mp-logo.png"
+              alt="MP3iBooks"
+              width={200}
+              height={200}
+              className="h-14 w-auto m-2"
+            />
           </div>
-        </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-4 py-4">
         {navigation.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href;
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
                 "group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-colors",
-                isActive ? "bg-[#C5A46D] text-white" : "text-gray-300 hover:bg-gray-700 hover:text-white",
+                isActive
+                  ? "bg-[#C5A46D] text-white"
+                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
               )}
             >
               <item.icon
                 className={cn(
                   "mr-3 h-5 w-5 flex-shrink-0",
-                  isActive ? "text-white" : "text-gray-400 group-hover:text-white",
+                  isActive
+                    ? "text-white"
+                    : "text-gray-400 group-hover:text-white"
                 )}
               />
               {item.name}
             </Link>
-          )
+          );
         })}
       </nav>
 
@@ -78,7 +92,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
       {/* Logout Modal */}
       <LogoutModal open={logoutOpen} onOpenChange={setLogoutOpen} />
     </div>
-  )
+  );
 
   return (
     <>
@@ -118,7 +132,11 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
                   leaveTo="opacity-0"
                 >
                   <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
-                    <button type="button" className="-m-2.5 p-2.5" onClick={() => setOpen(false)}>
+                    <button
+                      type="button"
+                      className="-m-2.5 p-2.5"
+                      onClick={() => setOpen(false)}
+                    >
                       <XMarkIcon className="h-6 w-6 text-white" />
                     </button>
                   </div>
@@ -135,5 +153,5 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
         <SidebarContent />
       </div>
     </>
-  )
+  );
 }

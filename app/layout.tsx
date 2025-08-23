@@ -8,8 +8,8 @@ import { Toaster } from "@/components/ui/sonner"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "MP3Books Admin Dashboard",
-  description: "Admin dashboard for MP3Books platform",
+  title: "MP3iBooks Admin Dashboard",
+  description: "Admin dashboard for MP3iBooks platform",
     generator: 'v0.dev'
 }
 
