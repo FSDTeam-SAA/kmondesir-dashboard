@@ -1,13 +1,20 @@
 import { audioApi } from "@/lib/audioApi";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export const useAudioList = (page = 1, limit = 10) => {
+type ListParams = {
+  q?: string;
+  subject?: string;
+  category?: string; // category _id (backend populates category)
+};
+
+export const useAudioList = (page = 1, limit = 10, params: ListParams = {}) => {
   return useQuery({
-    queryKey: ["audio", { page, limit }], // Include page and limit in query key
-    queryFn: () => audioApi.getAll(page, limit),
+    queryKey: ["audio", { page, limit, ...params }],
+    queryFn: () => audioApi.getAll(page, limit, params),
     retry: 3,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    placeholderData: (previousData) => previousData, // Keep previous data while fetching new page
+    keepPreviousData: true, // smooth pagination
+    placeholderData: (previousData) => previousData,
   });
 };
 
